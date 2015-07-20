@@ -26,10 +26,14 @@ func challenge1() {
 }
 
 func challenge2() {
-	fmt.Println(fixedXOR("1c0111001f010100061a024b53535009181c","686974207468652062756c6c277320657965"))
+	xor,err := fixedXOR("1c0111001f010100061a024b53535009181c","686974207468652062756c6c277320657965")
+	if err != nil {
+		log.Fatal(err);
+	}
+	fmt.Println(xor)
 }
 
-func fixedXOR(string1 string, string2 string) (string, err) {
+func fixedXOR(string1 string, string2 string) (string, error) {
 	str1decoded,err := hex.DecodeString(string1)
 	if err != nil {
  		return "", err
@@ -38,12 +42,12 @@ func fixedXOR(string1 string, string2 string) (string, err) {
 	if err != nil {
  		return "", err
 	} 
-	str1 := []byte(string1)
-	str2 := []byte(string2)
+	str1 := []byte(str1decoded)
+	str2 := []byte(str2decoded)
 	for i := 0; i < len(str1)/2; i++ {
 		fmt.Println(str1[i]^str2[i])
 	}
-	return "stuff"
+	return "stuff",nil
 }
 
 func HexStringToBase64(instr string) (string, error) {

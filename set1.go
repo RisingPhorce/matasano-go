@@ -67,10 +67,9 @@ func HexStringToBase64(instr string) (string, error) {
 func challenge3() {
 	const cipher = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
 	cipherbytes, _ := hex.DecodeString(cipher)
-	//letterfreqs := []float64{.0812, .0149, .0271, .0432, .1202, .023, .0203, .0592, .0731, .001, .0069, .0398, .0261, .0695, .0768, .0182, .0011, .0602, .0628, .091, .0288, .0111, .0209, .0017, .0211, .0007}
 	letterfreqs := makefreqs()
 	msg := ""
-	max := float64(26) // max ratio 100% or 1.00 * 26 letters...
+	max := float64(256) // max ratio 100% or 1.00 * 256 ascii letters...
 	key := byte(0)
 	for b := 0; b < 256; b++ {
 		candidateKey := byte(b)
@@ -95,7 +94,6 @@ func tryKey(cipherbytes []byte, key byte) []byte {
 		//fmt.Printf(", xor: %v; ", decoded[index] ^ candidateKey)
 		candidateClearHex[index] = cipherbytes[index] ^ key
 	}
-	//candidateClearDecoded, _ := hex.DecodeString(candidateClearHex)
 	return candidateClearHex
 }
 
@@ -107,11 +105,11 @@ func simpleScore(msgbytes []byte, freqs map[byte]float64) float64 {
 		histogram[msgbytes[i]] = histogram[msgbytes[i]] + 1
 	}
 	score := float64(0)
+	// accumulate the aggregate difference in character frequency ratios
 	for key,value := range histogram {
-		delta := float64(value) / float64(totalbytes) //* float64(100)
 		//fmt.Printf("histogram: %v, delta: %v, totalbytes: %v\n", histogram[j], delta, totalbytes)
 		targetratio := freqs[key]
-		actualratio := delta
+		actualratio := float64(value) / float64(totalbytes)
 		sdelta := math.Abs(targetratio - actualratio)
 		//fmt.Printf("for character: %v, target ratio: %v, actual ratio: %v, abs diff: %v", string(byte(j+97)), targetratio, actualratio, sdelta)
 		score += sdelta

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log"
 	"math"
-	//"strings"
+	//	"strings"
 )
 
 func main() {
@@ -17,6 +17,8 @@ func main() {
 	challenge2()
 	fmt.Print("challenge 3: ")
 	challenge3()
+	fmt.Print("challenge 4: ")
+	challenge4()
 	fmt.Println("\n")
 }
 
@@ -37,31 +39,7 @@ func challenge2() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%s\n", xor)
-}
-
-// interprets two input strings as hex, xors the contents and returns a hex encoding of the result
-func fixedXOR(string1 string, string2 string) (string, error) {
-	if len(string1) != len(string2) {
-		return "", errors.New("input strings must be of equal length")
-	}
-	str1, _ := hex.DecodeString(string1)
-	str2, _ := hex.DecodeString(string2)
-	var retstr = make([]byte, len(str1))
-	for i := range str1 {
-		retstr[i] = str1[i] ^ str2[i]
-		//fmt.Printf("\n%x xored with %x is %x\n", str1[i], str2[i], str1[i]^str2[i])
-	}
-	return hex.EncodeToString(retstr), nil
-}
-
-// returns a base64 encoding of a hex string
-func HexStringToBase64(instr string) (string, error) {
-	a, err := hex.DecodeString(instr)
-	if err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(a), nil
+	fmt.Printf("%s\n", hex.EncodeToString(xor))
 }
 
 func challenge3() {
@@ -85,6 +63,59 @@ func challenge3() {
 	fmt.Printf("message: \"%v\", key: %v, score: %v\n", msg, key, max)
 }
 
+func challenge4() {
+	const key = "ICE"
+	const importantwork1 = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal"
+	xord, _ := repeatingKeyXOR(importantwork1, key)
+	fmt.Printf("repeating key xor: %x\n", xord)
+}
+
+func repeatingKeyXOR(cleartxt string, key string) ([]byte, error) {
+	if len(cleartxt) == 0 || len(key) == 0 {
+		return nil, errors.New("input strings cannot be of length 0")
+	}
+	var retval = make([]byte, len(cleartxt))
+	clearhex := []byte(cleartxt)
+	keyhex := []byte(key)
+	for idx, b := range clearhex {
+		//fmt.Printf("\n%x xored with %x is %x\n", b, keyhex[idx % 3], b ^ keyhex[idx % 3])
+		retval[idx] = b ^ keyhex[idx%len(key)]
+	}
+	return retval, nil
+}
+
+// interprets two input strings as hex, xors the contents and returns a hex encoding of the result
+func fixedXOR(string1 string, string2 string) ([]byte, error) {
+	if len(string1) > len(string2) {
+		return nil, errors.New("string1 must be of equal length or great length than string 2")
+	}
+	str1, e1 := hex.DecodeString(string1)
+	if e1 != nil {
+		log.Fatal(e1)
+		return nil, e1
+	}
+	str2, e2 := hex.DecodeString(string2)
+	if e2 != nil {
+		log.Fatal(e2)
+		return nil, e2
+	}
+	var retstr = make([]byte, len(str1))
+	for i := range str1 {
+		retstr[i] = str1[i] ^ str2[i]
+		//fmt.Printf("\n%x xored with %x is %x\n", str1[i], str2[i], str1[i]^str2[i])
+	}
+	return retstr, nil
+}
+
+// returns a base64 encoding of a hex string
+func HexStringToBase64(instr string) (string, error) {
+	a, err := hex.DecodeString(instr)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(a), nil
+}
+
 func tryKey(cipherbytes []byte, key byte) []byte {
 	lenDecoded := len(cipherbytes)
 	candidateClearHex := make([]byte, lenDecoded)
@@ -106,7 +137,7 @@ func simpleScore(msgbytes []byte, freqs map[byte]float64) float64 {
 	}
 	score := float64(0)
 	// accumulate the aggregate difference in character frequency ratios
-	for key,value := range histogram {
+	for key, value := range histogram {
 		//fmt.Printf("histogram: %v, delta: %v, totalbytes: %v\n", histogram[j], delta, totalbytes)
 		targetratio := freqs[key]
 		actualratio := float64(value) / float64(totalbytes)
